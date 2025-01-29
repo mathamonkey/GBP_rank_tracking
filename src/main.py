@@ -75,7 +75,7 @@ def main(context):
 
     # We now track total count of GBP listings
     total_count = 0
-    found_rank = "N/A"
+    found_rank = "Not in the list"
 
     # If there's an "organic" list, use its length
     if "organic" in data and isinstance(data["organic"], list):

@@ -92,7 +92,7 @@ def main(context):
                     found_rank = "N/A"
                 break
 
-    log({
+    context.log({
         "lat": lat,
         "lng": lng,
         "searchTerm": searchTerm,

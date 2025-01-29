@@ -20,7 +20,7 @@ def main(context):
     except AppwriteException as err:
         context.error("Could not list users: " + repr(err))
 
-    # Because of your logs, we know context.req.body is already a dict in your environment
+    # Because of your logs, we know context.req.body is already a dict
     raw_body = context.req.body
 
     lat = raw_body.get("lat", 12.8917)
@@ -28,7 +28,7 @@ def main(context):
     searchTerm = raw_body.get("searchTerm", "dentists near me")
     targetGbp = (raw_body.get("targetGbp") or "").strip()
 
-    # Minimal change: add num=40 to the URL so it returns 40 results
+    # Minimal change: added ?num=40 so it returns up to 40 results
     from requests.utils import quote
     encodedSearchTerm = quote(searchTerm)
     url = f"https://www.google.com/maps/search/{encodedSearchTerm}/@{lat},{lng},14.00z/?num=40&brd_json=1"
@@ -73,10 +73,15 @@ def main(context):
     except:
         return context.res.json({"error": "Response not valid JSON", "raw": response.text}, status=500)
 
-    # We'll do the same rank-finding logic as before:
+    # We now track total count of GBP listings
+    total_count = 0
     found_rank = "N/A"
+
+    # If there's an "organic" list, use its length
     if "organic" in data and isinstance(data["organic"], list):
+        total_count = len(data["organic"])
         target_lower = targetGbp.lower()
+        
         for item in data["organic"]:
             title = (item.get("title") or "").strip().lower()
             orig_title = (item.get("original_title") or "").strip().lower()
@@ -92,5 +97,6 @@ def main(context):
         "lng": lng,
         "searchTerm": searchTerm,
         "targetGbp": targetGbp,
+        "totalCount": total_count,  # << New field: total # of GBP listings
         "rank": found_rank
     })

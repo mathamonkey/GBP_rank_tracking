@@ -92,6 +92,14 @@ def main(context):
                     found_rank = "N/A"
                 break
 
+    log({
+        "lat": lat,
+        "lng": lng,
+        "searchTerm": searchTerm,
+        "targetGbp": targetGbp,
+        "totalCount": total_count,  # << New field: total # of GBP listings
+        "rank": found_rank
+    })
     return context.res.json({
         "lat": lat,
         "lng": lng,

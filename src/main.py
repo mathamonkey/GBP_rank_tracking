@@ -31,7 +31,7 @@ def main(context):
     # Minimal change: added ?num=40 so it returns up to 40 results
     from requests.utils import quote
     encodedSearchTerm = quote(searchTerm)
-    url = f"https://www.google.com/maps/search/{encodedSearchTerm}/@{lat},{lng},14.00z/?num=40&brd_json=1"
+    url = f"https://www.google.com/maps/search/{encodedSearchTerm}/@{lat},{lng},14.00z/?num=50&brd_json=1"
 
     # Bright Data proxy credentials
     proxy_host = "brd.superproxy.io"

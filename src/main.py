@@ -27,10 +27,10 @@ def main(context):
     except:
         body = {}
 
-    lat = body.get("lat", 12.8917)
-    lng = body.get("lng", 77.5838)
-    searchTerm = body.get("searchTerm", "dentists near me")
-    targetGbp = body.get("targetGbp", "").strip()  # e.g. "daanT GURU - Advanced Multispeciality Dental Clinic"
+    lat = body.get("lat")
+    lng = body.get("lng")
+    searchTerm = body.get("searchTerm")
+    targetGbp = body.get("targetGbp").strip()  # e.g. "daanT GURU - Advanced Multispeciality Dental Clinic"
 
     # 2) Build the Google Maps URL
     from requests.utils import quote

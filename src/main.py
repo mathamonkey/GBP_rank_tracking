@@ -21,17 +21,18 @@ def main(context):
     except AppwriteException as err:
         context.error("Could not list users: " + repr(err))
 
-    # 1) Parse JSON body for lat, lng, searchTerm
+    # 1) Parse JSON body for lat, lng, searchTerm, and targetGbp
     try:
         body = json.loads(context.req.body)
     except:
         body = {}
+
     lat = body.get("lat", 12.8917)
     lng = body.get("lng", 77.5838)
     searchTerm = body.get("searchTerm", "dentists near me")
+    targetGbp = body.get("targetGbp", "").strip()  # e.g. "daanT GURU - Advanced Multispeciality Dental Clinic"
 
     # 2) Build the Google Maps URL
-    #    e.g. https://www.google.com/maps/search/dentists%20near%20me/@12.8917,77.5838,14.00z/?brd_json=1
     from requests.utils import quote
     encodedSearchTerm = quote(searchTerm)
     url = f"https://www.google.com/maps/search/{encodedSearchTerm}/@{lat},{lng},14.00z/?brd_json=1"
@@ -43,8 +44,6 @@ def main(context):
     proxy_pass = "flo4tpqytqm5"
 
     # 4) Generate a UULE from lat/lng
-    #    Common formula: "w+CAIQICI" + "{lat},{lng}" + ":ChI"
-    #    Then Base64-url-safe encode it
     def generate_uule(lat, lng):
         raw_string = f"w+CAIQICI{lat},{lng}:ChI"
         encoded = base64.urlsafe_b64encode(raw_string.encode()).decode()
@@ -59,16 +58,13 @@ def main(context):
     }
 
     # 6) Build headers, embedding the UULE in the cookie
-    #    Also can add 'x-geo' or others if you want
     headers = {
         "accept-language": "en-US,en;q=0.9",
         "user-agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         ),
-        # Insert the generated UULE in the cookie
         "cookie": f"CONSENT=YES+; UULE={uule_value}",
-        # Optionally set x-geo if you want to replicate the original cURL
         "x-geo": f"{lat},{lng}"
     }
 
@@ -90,19 +86,29 @@ def main(context):
             status=500
         )
 
-    # 9) Extract the 'title' from each item in data["organic"]
-    names = []
+    # 9) Search for target GBP in the "organic" array
+    #    We'll do a case-insensitive match on `title` or `original_title`.
+    found_rank = "Not in the list"
     if "organic" in data and isinstance(data["organic"], list):
+        target_lower = targetGbp.lower()
         for item in data["organic"]:
-            if "title" in item:
-                names.append(item["title"])
+            title = (item.get("title") or "").strip().lower()
+            orig_title = (item.get("original_title") or "").strip().lower()
+            if title == target_lower or orig_title == target_lower:
+                # If the item has a 'rank' field, return it
+                if "rank" in item:
+                    found_rank = item["rank"]
+                else:
+                    # If the 'rank' field doesn't exist, you could derive from loop index or just say "N/A"
+                    # found_rank = i + 1  # if you want the loop index +1
+                    found_rank = "Rank field empty"
+                break
 
-    # 10) Return the extracted names + some debug info
+    # 10) Return just the rank (or "N/A" if not found)
     return context.res.json({
         "lat": lat,
         "lng": lng,
         "searchTerm": searchTerm,
-        "uuleUsed": uule_value,
-        "count": len(names),
-        "gbpTitles": names
+        "targetGbp": targetGbp,
+        "rank": found_rank
     })

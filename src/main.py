@@ -23,9 +23,9 @@ def main(context):
     # Because of your logs, we know context.req.body is already a dict
     raw_body = context.req.body
 
-    lat = raw_body.get("lat", 12.8917)
-    lng = raw_body.get("lng", 77.5838)
-    searchTerm = raw_body.get("searchTerm", "dentists near me")
+    lat = raw_body.get("lat")
+    lng = raw_body.get("lng")
+    searchTerm = raw_body.get("searchTerm")
     targetGbp = (raw_body.get("targetGbp") or "").strip()
 
     # Minimal change: added ?num=40 so it returns up to 40 results

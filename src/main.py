@@ -22,10 +22,13 @@ def main(context):
         context.error("Could not list users: " + repr(err))
 
     # 1) Parse JSON body for lat, lng, searchTerm, and targetGbp
+    context.log("Raw body: " + str(context.req.body))
     try:
         body = json.loads(context.req.body)
     except:
         body = {}
+        
+    context.log("body: " + str(body))
 
     lat = body.get("lat")
     lng = body.get("lng")

@@ -28,7 +28,7 @@ def main(context):
     searchTerm = raw_body.get("searchTerm")
     targetGbp = (raw_body.get("targetGbp") or "").strip()
 
-    # Minimal change: added ?num=40 so it returns up to 40 results
+    # Minimal change: added ?num=50 so it returns up to 50 results
     from requests.utils import quote
     encodedSearchTerm = quote(searchTerm)
     url = f"https://www.google.com/maps/search/{encodedSearchTerm}/@{lat},{lng},14.00z/?num=50&brd_json=1"
@@ -62,22 +62,43 @@ def main(context):
         "x-geo": f"{lat},{lng}"
     }
 
-    # Make the GET request with the proxy
-    try:
-        response = requests.get(url, proxies=proxies, headers=headers, verify=False)
-    except Exception as e:
-        return context.res.json({"error": f"Request failed: {str(e)}"}, status=500)
+    # Retry loop up to 5 times for potential proxy failure
+    max_retries = 5
+    response = None
+    attempt = 0
 
+    while attempt < max_retries:
+        try:
+            response = requests.get(url, proxies=proxies, headers=headers, verify=False)
+            break  # If successful, exit the loop
+        except Exception as e:
+            attempt += 1
+            if attempt == max_retries:
+                # All 5 attempts failed
+                console.log({
+                    "error": f"Request failed after {max_retries} attempts: {str(e)}"
+                })
+                return context.res.json({
+                    "error": f"Request failed after {max_retries} attempts: {str(e)}"
+                })
+
+    # If we reach here, response should be valid
     try:
         data = response.json()
     except:
-        return context.res.json({"error": "Response not valid JSON", "raw": response.text}, status=500)
+        console.log({
+            "error": "Response not valid JSON",
+            "raw": response.text
+        })
+        return context.res.json({
+            "error": "Response not valid JSON",
+            "raw": response.text
+        })
 
     # We now track total count of GBP listings
     total_count = 0
     found_rank = "Not in the list"
 
-    # If there's an "organic" list, use its length
     if "organic" in data and isinstance(data["organic"], list):
         total_count = len(data["organic"])
         target_lower = targetGbp.lower()
@@ -97,7 +118,7 @@ def main(context):
         "lng": lng,
         "searchTerm": searchTerm,
         "targetGbp": targetGbp,
-        "totalCount": total_count,  # << New field: total # of GBP listings
+        "totalCount": total_count,
         "rank": found_rank
     })
     return context.res.json({
@@ -105,6 +126,6 @@ def main(context):
         "lng": lng,
         "searchTerm": searchTerm,
         "targetGbp": targetGbp,
-        "totalCount": total_count,  # << New field: total # of GBP listings
+        "totalCount": total_count,
         "rank": found_rank
     })

@@ -92,6 +92,5 @@ def main(context):
         "lng": lng,
         "searchTerm": searchTerm,
         "targetGbp": targetGbp,
-        "uuleUsed": uule_value,
         "rank": found_rank
     })

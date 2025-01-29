@@ -27,7 +27,7 @@ def main(context):
     if context.req.path == "/ping":
         # Use res object to respond with text(), json(), or binary()
         # Don't forget to return a response!
-        return context.res.text("Pong")
+        return context.res.text("Pong_updated")
 
     return context.res.json(
         {

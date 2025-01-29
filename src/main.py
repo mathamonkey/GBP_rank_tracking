@@ -75,7 +75,7 @@ def main(context):
             attempt += 1
             if attempt == max_retries:
                 # All 5 attempts failed
-                console.log({
+                context.log({
                     "error": f"Request failed after {max_retries} attempts: {str(e)}"
                 })
                 return context.res.json({
@@ -86,7 +86,7 @@ def main(context):
     try:
         data = response.json()
     except:
-        console.log({
+        context.log({
             "error": "Response not valid JSON",
             "raw": response.text
         })

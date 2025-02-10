@@ -84,7 +84,9 @@ def main(context):
         
         for item in data["organic"]:
             title = (item.get("title") or "").strip().lower()
+            context.log(title)
             orig_title = (item.get("original_title") or "").strip().lower()
+            context.log(orig_title)
             if title == target_lower or orig_title == target_lower:
                 if "rank" in item:
                     found_rank = item["rank"]
